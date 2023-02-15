@@ -3,7 +3,6 @@
 require "logger"
 require "socket"
 require "io/wait"
-require "stringio"
 
 require_relative "../bytes"
 require_relative "../protocol"

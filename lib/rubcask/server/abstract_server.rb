@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "stringio"
+
 require_relative "../bytes"
 require_relative "../protocol"
 require_relative "config"
