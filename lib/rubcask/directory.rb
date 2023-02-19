@@ -2,6 +2,7 @@
 
 require "concurrent"
 
+require "fiber" # rubocop:disable Lint/RedundantRequireStatement It is needed for `Fiber.current`(used by concurrent) in some rubies
 require "forwardable"
 require "logger"
 require "monitor"
