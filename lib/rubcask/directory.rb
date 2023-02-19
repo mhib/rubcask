@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-require "concurrent"
+require "concurrent/atomic/atomic_fixnum"
+require "concurrent/atomic/reentrant_read_write_lock"
 
 require "fiber" # rubocop:disable Lint/RedundantRequireStatement It is needed for `Fiber.current`(used by concurrent) in some rubies
 require "forwardable"
