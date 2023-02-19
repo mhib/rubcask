@@ -131,11 +131,11 @@ module Rubcask
         end
 
         data_file = @files[entry.file_id]
-        data_file.synchronize do
-          value = data_file[entry.value_pos, entry.value_size].value
-          return nil if Tombstone.is_tombstone?(value)
-          return value
-        end
+
+        # We are using pread so there's no need to synchronize the read
+        value = data_file.pread(entry.value_pos, entry.value_size).value
+        return nil if Tombstone.is_tombstone?(value)
+        return value
       end
     end
 
@@ -190,21 +190,16 @@ module Rubcask
     # @yieldparam [String] value
     # @macro lock_block_for_iteration
     # @macro key_any_order
-    # @return Enumerator if block not given
+    # @return [Enumerator<Array(String, String)>] if no block given
     def each
       return to_enum(__method__) unless block_given?
 
       @lock.with_read_lock do
         @keydir.each do |key, entry|
           file = @files[entry.file_id]
-          file.mon_enter
-          begin
-            value = file[entry.value_pos, entry.value_size].value
-            next if Tombstone.is_tombstone?(value)
-            yield [key, value]
-          ensure
-            file.mon_exit
-          end
+          value = file[entry.value_pos, entry.value_size].value
+          next if Tombstone.is_tombstone?(value)
+          yield [key, value]
         end
       end
     end
@@ -213,7 +208,7 @@ module Rubcask
     # @macro deleted_keys
     # @macro key_any_order
     # @macro lock_block_for_iteration
-    # @return Enumerator if block not given
+    # @return [Enumerator<String>] if no block given
     def each_key(&block)
       return to_enum(__method__) unless block
 

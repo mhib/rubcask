@@ -13,7 +13,7 @@ module Rubcask
     ID_REGEX = /(\d+)\.data$/
     HINT_EXTENSION_REGEX = /\.data$/
 
-    def_delegators :@data_file, :seek, :[], :close, :flush, :each, :pos, :write_pos
+    def_delegators :@data_file, :seek, :[], :pread, :close, :flush, :each, :pos, :write_pos
 
     # @return [String] path of the file
     attr_reader :path

@@ -22,18 +22,35 @@ module Rubcask
       @write_pos = file_size
     end
 
+    # @!macro [new] might_change_pos
+    #   @note Calling this method might change `pos` of the `file`
+
+    # @!macro [new] no_change_pos
+    #   @note Calling this method will not change `pos` of the `file`
+
+    # @!macro [new] read_result_return
+    #   @return [DataEntry]
+    #   @return [nil] if at the end of file
+    #   @raise [ChecksumError] if the entry has an incorrect checksum
+
     # Fetch entry at given offset.
-    # Optional size parameter is size of the record. With it we make one less I/O
+    # With optional size parameter we can do less I/O operations.
+    # @macro might_change_pos
     # @param [Integer] offset File offset in bytes
-    # @param [Integer, nil] size Record size in bytes
+    # @param [Integer, nil] size Entry size in bytes
+    # @macro read_result_return
     def [](offset, size = nil)
-      seek(offset)
-      read(size)
+      if size.nil?
+        seek(offset)
+        return read
+      end
+      pread(offset, size)
     end
 
-    # yields each record in the file
+    # yields each entry in the file
+    # @macro might_change_pos
     # @return [Enumerator] if no block given
-    # @yieldparam [DataEntry]
+    # @yieldparam [DataEntry] data_entry Entry from the file
     def each
       return to_enum(__method__) unless block_given?
 
@@ -46,28 +63,30 @@ module Rubcask
       end
     end
 
-    # Read entry at the current file position
-    # @return [DataEntry]
-    # @return [nil] if at the end of file
-    # @raise [ChecksumError] if the entry has an incorrect checksum
+    # Read an entry at the current file position
+    # @macro might_change_pos
+    # @param [Integer, nil] size Entry size in bytes
+    # @macro read_result_return
     def read(size = nil)
-      io = size ? StringIO.new(@file.read(size)) : @file
-      header = io.read(18)
+      read_from_io(
+        size ? StringIO.new(@file.read(size)) : @file
+      )
+    end
 
-      return nil unless header
-
-      crc, expire_timestamp, key_size, value_size = header.unpack(HEADER_FORMAT)
-      key = io.read(key_size)
-      value = io.read(value_size)
-
-      raise ChecksumError, "Checksums do not match" if crc != Zlib.crc32(header[4..] + key + value)
-      DataEntry.new(expire_timestamp, key, value)
+    # Fetch an entry at given offset and with provided size
+    # @macro no_change_pos
+    # @param [Integer] offset File offset in bytes
+    # @param [Integer] size Entry size in bytes
+    # @macro read_result_return
+    def pread(offset, size)
+      read_from_io(StringIO.new(@file.pread(size, offset)))
     end
 
     AppendResult = Struct.new(:value_pos, :value_size)
-    # Append a record at the end of the file
+    # Append an entry at the end of the file
+    # @macro no_change_pos
     # @param [DataEntry] entry Entry to write to the file
-    # @return [AppendResult] struct containing position and size of the record
+    # @return [AppendResult] struct containing position and size of the entry
     def append(entry)
       current_pos = @write_pos
 
@@ -86,6 +105,21 @@ module Rubcask
       )
       @file.flush
       AppendResult.new(current_pos, @write_pos - current_pos)
+    end
+
+    private
+
+    def read_from_io(io)
+      header = io.read(18)
+
+      return nil unless header
+
+      crc, expire_timestamp, key_size, value_size = header.unpack(HEADER_FORMAT)
+      key = io.read(key_size)
+      value = io.read(value_size)
+
+      raise ChecksumError, "Checksums do not match" if crc != Zlib.crc32(header[4..] + key + value)
+      DataEntry.new(expire_timestamp, key, value)
     end
   end
 end
