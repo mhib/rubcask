@@ -18,3 +18,5 @@ gem "kalibera", "~> 0.1.2"
 gem "timecop", "~> 0.9.6"
 
 gem "simplecov", "~> 0.22.0"
+
+gem "stringio", "~> 3.0", ">= 3.0.6"
