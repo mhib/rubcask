@@ -122,8 +122,6 @@ module Rubcask
     # @return [nil] If no value associated with the key
     def [](key)
       key = normalize_key(key)
-      entry = nil
-      data_file = nil
       @lock.with_read_lock do
         entry = @keydir[key]
         return nil unless entry
