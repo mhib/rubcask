@@ -33,7 +33,7 @@ module Rubcask
       # Starts the server
       # @param [::Async::Condition, nil] on_start_condition The condition will be signalled after a successful bind
       def start(on_start_condition = nil)
-        Async do
+        Sync do
           @shutdown_condition = ::Async::Condition.new
 
           _, @task = @endpoint.bind do |server, task|
