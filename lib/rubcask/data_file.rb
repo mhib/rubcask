@@ -12,8 +12,8 @@ module Rubcask
 
     attr_reader :write_pos
 
-    HEADER_FORMAT = "NQ>nN"
     HEADER_WITHOUT_CRC_FORMAT = "Q>nN"
+    HEADER_FORMAT = "N#{HEADER_WITHOUT_CRC_FORMAT}"
 
     # @param [File] file File with the data
     # @param [Integer] file_size Current size of `file` in bytes
