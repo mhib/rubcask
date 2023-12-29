@@ -81,8 +81,12 @@ module Rubcask
         if @status == :running
           @status = :shutdown
         end
-        @shutdown_pipe[1].write_nonblock("\0")
-        @shutdown_pipe[1].close
+        begin
+          @shutdown_pipe[1].write_nonblock("\0")
+          @shutdown_pipe[1].close
+        rescue
+          # We might have race with cleanup shutdown pipe
+        end
       end
 
       # Prepares an IO pipe that is used in shutdown process

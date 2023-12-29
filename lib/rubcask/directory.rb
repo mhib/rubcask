@@ -61,6 +61,7 @@ module Rubcask
     def initialize(dir, config: Config.new)
       @dir = dir
       @config = check_config(config)
+      @active = nil
 
       max_id = 0
       files = dir_data_files
