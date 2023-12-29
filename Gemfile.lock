@@ -53,8 +53,8 @@ GEM
       language_server-protocol (~> 3.17.0.2)
       rubocop (= 1.40.0)
       rubocop-performance (= 1.15.1)
-    stringio (3.0.6)
-    stringio (3.0.6-java)
+    stringio (3.1.0)
+    stringio (3.1.0-java)
     timecop (0.9.6)
     unicode-display_width (2.3.0)
 
@@ -70,7 +70,7 @@ DEPENDENCIES
   rubcask!
   simplecov (~> 0.22.0)
   standard (~> 1.20)
-  stringio (~> 3.0, >= 3.0.6)
+  stringio (~> 3.1)
   timecop (~> 0.9.6)
 
 BUNDLED WITH
