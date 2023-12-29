@@ -270,7 +270,7 @@ module Rubcask
     attr_reader :config, :active, :worker, :logger
 
     def put(key, value, expire_timestamp)
-      expire_timestamp &= DataFile::TIMESTAMP_MASK
+      expire_timestamp = expire_timestamp.clamp(0, DataFile::MAX_EXPIRE_VALUE)
       key = normalize_key(key)
       @lock.with_write_lock do
         @keydir[key] = active.append(

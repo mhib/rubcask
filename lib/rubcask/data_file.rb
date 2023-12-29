@@ -17,8 +17,9 @@ module Rubcask
     HEADER_WITHOUT_CRC_FORMAT = "Q>nN"
     HEADER_FORMAT = "N#{HEADER_WITHOUT_CRC_FORMAT}"
 
-    TIMESTAMP_MASK = ~(1 << 63)
+    EXPIRE_MASK = ~(1 << 63)
     DELETED_MASK = (1 << 63)
+    MAX_EXPIRE_VALUE = DELETED_MASK - 1
 
     # @param [File] file File with the data
     # @param [Integer] file_size Current size of `file` in bytes
@@ -123,7 +124,7 @@ module Rubcask
       crc, expire_timestamp_with_deleted, key_size, value_size = header.unpack(HEADER_FORMAT)
       key = io.read(key_size)
       value = io.read(value_size)
-      expire_timestamp = (expire_timestamp_with_deleted & TIMESTAMP_MASK)
+      expire_timestamp = (expire_timestamp_with_deleted & EXPIRE_MASK)
       deleted = (expire_timestamp_with_deleted & DELETED_MASK) != 0
 
       raise ChecksumError, "Checksums do not match" if crc != Zlib.crc32(header[4..] + key + value)
