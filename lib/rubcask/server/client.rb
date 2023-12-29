@@ -103,8 +103,8 @@ module Rubcask
 
       private
 
-      def call_method(method, *)
-        call(create_call_message(method, *))
+      def call_method(method, *args)
+        call(create_call_message(method, *args))
         get_response
       end
 
