@@ -133,9 +133,9 @@ module Rubcask
         data_file = @files[entry.file_id]
 
         # We are using pread so there's no need to synchronize the read
-        value = data_file.pread(entry.value_pos, entry.value_size).value
-        return nil if Tombstone.is_tombstone?(value)
-        return value
+        entry = data_file.pread(entry.value_pos, entry.value_size)
+        return nil if entry.deleted?
+        return entry.value
       end
     end
 
@@ -197,9 +197,9 @@ module Rubcask
       @lock.with_read_lock do
         @keydir.each do |key, entry|
           file = @files[entry.file_id]
-          value = file[entry.value_pos, entry.value_size].value
-          next if Tombstone.is_tombstone?(value)
-          yield [key, value]
+          entry = file[entry.value_pos, entry.value_size]
+          next if entry.deleted?
+          yield [key, entry.value]
         end
       end
     end
@@ -272,7 +272,7 @@ module Rubcask
       key = normalize_key(key)
       @lock.with_write_lock do
         @keydir[key] = active.append(
-          DataEntry.new(expire_timestamp, key, value)
+          DataEntry.new(expire_timestamp, key, value, false)
         )
         if active.write_pos >= @config.max_file_size
           create_new_file!
@@ -284,7 +284,7 @@ module Rubcask
     # @note This method assumes write lock and normalized key
     def do_delete(key, prev_file_id)
       active.append(
-        DataEntry.new(NO_EXPIRE_TIMESTAMP, key, Tombstone.new_tombstone(active.id, prev_file_id))
+        DataEntry.new(NO_EXPIRE_TIMESTAMP, key, Tombstone.new_tombstone(active.id, prev_file_id), true)
       )
       @keydir.delete(key)
       if active.write_pos >= @config.max_file_size
@@ -343,8 +343,7 @@ module Rubcask
           start_pos = pos
           pos = file.pos
 
-          next if entry.expired?
-          next if Tombstone.is_tombstone?(entry.value)
+          next if entry.expired? || entry.deleted?
 
           @lock.acquire_read_lock
           begin

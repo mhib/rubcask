@@ -12,7 +12,9 @@ module Rubcask
 
     attr_reader :write_pos
 
-    HEADER_WITHOUT_CRC_FORMAT = "Q>nN"
+    HEADER_SIZE = 4 + 8 + 1 + 2 + 4
+
+    HEADER_WITHOUT_CRC_FORMAT = "Q>CnN"
     HEADER_FORMAT = "N#{HEADER_WITHOUT_CRC_FORMAT}"
 
     # @param [File] file File with the data
@@ -92,14 +94,16 @@ module Rubcask
 
       key_size = entry.key.bytesize
       value_size = entry.value.bytesize
+      deleted_i = entry.deleted? ? 1 : 0
 
       crc = Zlib.crc32([
         entry.expire_timestamp,
+        deleted_i,
         key_size,
         value_size
       ].pack(HEADER_WITHOUT_CRC_FORMAT) + entry.key + entry.value)
       @write_pos += @file.write(
-        [crc, entry.expire_timestamp, key_size, value_size].pack(HEADER_FORMAT),
+        [crc, entry.expire_timestamp, deleted_i, key_size, value_size].pack(HEADER_FORMAT),
         entry.key,
         entry.value
       )
@@ -110,16 +114,16 @@ module Rubcask
     private
 
     def read_from_io(io)
-      header = io.read(18)
+      header = io.read(HEADER_SIZE)
 
       return nil unless header
 
-      crc, expire_timestamp, key_size, value_size = header.unpack(HEADER_FORMAT)
+      crc, expire_timestamp, deleted_i, key_size, value_size = header.unpack(HEADER_FORMAT)
       key = io.read(key_size)
       value = io.read(value_size)
 
       raise ChecksumError, "Checksums do not match" if crc != Zlib.crc32(header[4..] + key + value)
-      DataEntry.new(expire_timestamp, key, value)
+      DataEntry.new(expire_timestamp, key, value, deleted_i == 1)
     end
   end
 end
