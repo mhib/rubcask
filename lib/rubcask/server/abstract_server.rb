@@ -18,8 +18,28 @@ module Rubcask
 
       private
 
+      def read_command_args(conn)
+        length = conn.gets(Protocol::SEPARATOR)
+
+        return nil unless length
+        length = length.to_i
+
+        command_body = read_command_body(conn, length)
+
+        return nil unless command_body
+        return nil if command_body.bytesize != length
+
+        reader = StringIO.new(command_body)
+
+        command = reader.gets(SEPARATOR)
+        command&.chomp!(SEPARATOR)
+
+        args = parse_args(reader)
+        [command, args]
+      end
+
       def client_loop(conn)
-        loop do
+        while running?
           length = conn.gets(Protocol::SEPARATOR)
 
           break unless length

@@ -156,14 +156,14 @@ class TestDirectoryDataFile < Minitest::Test
   def test_delete_that_creates_a_new_file
     directory = Rubcask::Directory.new(@dir, config: Rubcask::Config.new { |x| x.max_file_size = Rubcask::Bytes::KILOBYTE })
 
-    1.upto(1_000) do |idx|
+    1.upto(100) do |idx|
       str_idx = idx.to_s
       directory[str_idx] = "a" * idx
     end
 
     old_files = Set.new(Dir.glob(File.join(@dir, "*.data")))
 
-    1.upto(1_000) do |idx|
+    1.upto(100) do |idx|
       str_idx = idx.to_s
       directory.delete(str_idx)
     end

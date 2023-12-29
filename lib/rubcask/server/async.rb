@@ -18,6 +18,7 @@ module Rubcask
         @port = config.port
         @logger = Logger.new($stdout)
         @endpoint = ::Async::IO::Endpoint.tcp(@hostname, @port)
+        @running = false
       end
 
       # Shuts down the server
@@ -25,6 +26,7 @@ module Rubcask
       def shutdown
         return unless @task
         Sync do
+          @running = false
           @shutdown_condition.signal
           @task.wait
         end
@@ -47,6 +49,7 @@ module Rubcask
 
             server.listen(Socket::SOMAXCONN)
             on_start_condition&.signal
+            @running = true
 
             server.accept_each do |conn|
               conn.binmode
@@ -58,6 +61,27 @@ module Rubcask
 
       private
 
+      def running?
+        @running
+      end
+
+      def client_loop(conn)
+        q = Queue.new
+        Async do
+          @shutdown_condition.wait
+          q << nil
+        end
+        while running?
+          Async do
+            q << read_command_args(conn)
+          end
+          command_args = q.pop
+          return unless command_args
+
+          conn.write(execute_command!(*command_args))
+        end
+      end
+
       def define_close_routine(server, task)
         task.async do |subtask|
           @shutdown_condition.wait
@@ -65,6 +89,12 @@ module Rubcask
           Console.logger.info(server) { "Shutting down connections on #{server.local_address.inspect}" }
 
           server.close
+
+          subtask.with_timeout(30) do
+            task.children.each { |t| t.wait unless t == subtask }
+          rescue ::Async::TimeoutError
+            Console.logger.warn("Could not terminate child connections...")
+          end
 
           task.stop
         end

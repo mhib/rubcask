@@ -65,6 +65,10 @@ module Rubcask
           @status = :shutdown
           cleanup_listeners
           @threads.list.each(&:kill)
+          @threads.list.each do |t|
+            t.join
+          rescue
+          end
           @status = :stopped
           @connected = false
           logger.info "Closed server"
@@ -92,6 +96,10 @@ module Rubcask
       private
 
       attr_reader :logger
+
+      def running?
+        @status == :running
+      end
 
       def cleanup_listeners
         @listeners.each do |listener|
@@ -143,6 +151,16 @@ module Rubcask
       def consume_pipe(pipe)
         buf = +""
         while String === pipe.read_nonblock([pipe.nread, 8].max, buf, exception: false)
+        end
+      end
+
+      def client_loop(conn)
+        while running?
+          command_args = read_command_args(conn)
+          return nil unless command_args
+          Thread.handle_interrupt(Exception => :never) do
+            conn.write(execute_command!(*command_args))
+          end
         end
       end
 
