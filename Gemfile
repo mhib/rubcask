@@ -9,7 +9,7 @@ gem "rake", "~> 13.0"
 
 gem "minitest", "~> 5.0"
 
-gem "standard", "~> 1.20"
+gem "standard", "~> 1.33"
 
 gem "benchmark-ips", "~> 2.10"
 
@@ -18,5 +18,3 @@ gem "kalibera", "~> 0.1.2"
 gem "timecop", "~> 0.9.6"
 
 gem "simplecov", "~> 0.22.0"
-
-gem "stringio", "~> 3.1"

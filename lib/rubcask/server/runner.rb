@@ -2,8 +2,8 @@
 
 require "concurrent/timer_task"
 
-require_relative "./config"
-require_relative "./runner/config"
+require_relative "config"
+require_relative "runner/config"
 require_relative "../config"
 
 module Rubcask

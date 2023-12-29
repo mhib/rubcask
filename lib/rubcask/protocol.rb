@@ -59,7 +59,7 @@ module Rubcask
       #   @return [String] Encoded "$1" messege.
       def generate_cached_message(method)
         value = encode_message(const_get(method.upcase)).freeze
-        define_method "#{method}_message" do
+        define_method :"#{method}_message" do
           value
         end
       end
