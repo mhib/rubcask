@@ -2,6 +2,7 @@
 
 require_relative "rubcask/version"
 require_relative "rubcask/directory"
+require_relative "rubcask/marshaled_directory"
 require_relative "rubcask/bytes"
 
 module Rubcask
