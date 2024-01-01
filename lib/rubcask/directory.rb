@@ -328,9 +328,10 @@ module Rubcask
         end
       end
 
+      merging_paths.each { |_id, path| FileUtils.chmod("+x", path) }
+
       @lock.with_write_lock do
         close_not_active
-        merging_paths.each { |_id, path| FileUtils.chmod("+x", path) }
         reload!
       end
       clear_files
