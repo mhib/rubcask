@@ -108,7 +108,6 @@ module Rubcask
     # @param [String] value
     # @param [Integer] ttl Time to live
     # @return [String] the value provided by the user
-    # @return [String] the value provided by the user
     # @raise [ArgumentError] if ttl is negative
     def set_with_ttl(key, value, ttl)
       raise ArgumentError, "Negative ttl" if ttl.negative?
