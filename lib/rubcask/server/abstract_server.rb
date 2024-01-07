@@ -19,7 +19,7 @@ module Rubcask
       private
 
       def read_command_args(conn)
-        length = conn.gets(Protocol::SEPARATOR)
+        length = conn.gets(SEPARATOR, chomp: true)
 
         return nil unless length
         length = length.to_i
@@ -31,8 +31,7 @@ module Rubcask
 
         reader = StringIO.new(command_body)
 
-        command = reader.gets(SEPARATOR)
-        command&.chomp!(SEPARATOR)
+        command = reader.gets(SEPARATOR, chomp: true)
 
         args = parse_args(reader)
         [command, args]
@@ -40,7 +39,7 @@ module Rubcask
 
       def client_loop(conn)
         while running?
-          length = conn.gets(Protocol::SEPARATOR)
+          length = conn.gets(SEPARATOR, chomp: true)
 
           break unless length
           length = length.to_i
@@ -52,8 +51,7 @@ module Rubcask
 
           reader = StringIO.new(command_body)
 
-          command = reader.gets(SEPARATOR)
-          command&.chomp!(SEPARATOR)
+          command = reader.gets(SEPARATOR, chomp: true)
 
           args = parse_args(reader)
 
@@ -102,7 +100,7 @@ module Rubcask
       end
 
       def parse_word(reader)
-        length = reader.gets(SEPARATOR).to_i
+        length = reader.gets(SEPARATOR, chomp: true).to_i
         return nil if length.zero?
         reader.read(length)
       end

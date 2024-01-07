@@ -113,7 +113,7 @@ module Rubcask
       end
 
       def get_response
-        length = @socket.gets(Protocol::SEPARATOR)
+        length = @socket.gets(SEPARATOR, chomp: true)
 
         if length.nil?
           raise InvalidResponseError, "no response"
