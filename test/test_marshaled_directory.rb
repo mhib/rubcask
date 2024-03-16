@@ -11,8 +11,8 @@ class TestMarshaledDirectory < Minitest::Test
   def test_write_read
     directory = Rubcask::MarshaledDirectory.new(Rubcask::Directory.new(@dir))
 
-    key = CustomKey.new({ three: 3})
-    value = CustomValue.new("1", [3,4])
+    key = CustomKey.new({three: 3})
+    value = CustomValue.new("1", [3, 4])
 
     directory[key] = value
     assert_equal(value, directory[key])
