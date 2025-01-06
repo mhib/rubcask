@@ -39,22 +39,8 @@ module Rubcask
 
       def client_loop(conn)
         while running?
-          length = conn.gets(SEPARATOR, chomp: true)
-
-          break unless length
-          length = length.to_i
-
-          command_body = read_command_body(conn, length)
-
-          break unless command_body
-          break if command_body.bytesize != length
-
-          reader = StringIO.new(command_body)
-
-          command = reader.gets(SEPARATOR, chomp: true)
-
-          args = parse_args(reader)
-
+          command_args = read_command_args(conn)
+          break unless command_args
           conn.write(execute_command!(command, args))
         end
       end
@@ -106,17 +92,7 @@ module Rubcask
       end
 
       def read_command_body(conn, length)
-        command_body = (+"").b
-        size = 0
-
-        while size < length
-          val = conn.read([MAX_READ_SIZE, length - size].min)
-          return nil if val.nil?
-          size += val.bytesize
-          command_body << val
-        end
-
-        command_body
+        conn.read(length)
       end
 
       def parse_args(reader)
