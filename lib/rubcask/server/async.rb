@@ -80,7 +80,7 @@ module Rubcask
 
           conn.write(execute_command!(*command_args))
         end
-      rescue => x
+      rescue => error
         Console::Event::Failure.for(error).emit(server, "Error while handling connection")
       end
 
