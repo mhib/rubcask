@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "async/io"
-require "async/io/trap"
+require "async/queue"
 require "async/io/stream"
 
 require_relative "abstract_server"
@@ -54,6 +54,8 @@ module Rubcask
             server.accept_each do |conn|
               conn.binmode
               client_loop(::Async::IO::Stream.new(conn))
+            ensure
+              ::Async::Task.current.stop
             end
           end
         end
@@ -66,20 +68,20 @@ module Rubcask
       end
 
       def client_loop(conn)
-        q = Queue.new
+        q = ::Async::Queue.new
         Async do
           @shutdown_condition.wait
           q << nil
         end
         while running?
-          Async do
-            q << read_command_args(conn)
-          end
-          command_args = q.pop
+          Async { q << read_command_args(conn) }
+          command_args = q.dequeue
           return unless command_args
 
           conn.write(execute_command!(*command_args))
         end
+      rescue => x
+        Console::Event::Failure.for(error).emit(server, "Error while handling connection")
       end
 
       def define_close_routine(server, task)
@@ -101,7 +103,7 @@ module Rubcask
       end
 
       def read_command_body(conn, length)
-        conn.read(length) # Async does the looping for us
+        conn.read(length)
       end
     end
   end
